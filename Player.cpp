@@ -12,6 +12,7 @@ void Player::initPLayer()
 	this->_player1.setRadius(50);
 	this->_player1.setFillColor(sf::Color::Blue);
 	this->_player1.setPosition(100, 100);
+	this->_player1.setOrigin(this->_player1.getRadius(), this->_player1.getRadius());
 	this->PlayerMovement.x = 0.0f;
 	this->PlayerMovement.y = 0.0f;
 	this->Diameter = this->_player1.getRadius() * 2;
@@ -49,50 +50,62 @@ void Player::_ControllerPlayer(sf::RenderWindow& window, sf::Event& event)
 					break;
 			}
 			this->_player1.move(this->PlayerMovement);
-			if (!this->_ObstacleBounds())
-			{
-				this->_player1.setPosition(currPos);
-			}
+			int ChosenBound = _ObstacleBounds();
+			std::cout << "Chosen Bound: " << ChosenBound << "\n";
 			if (!this->_OutOfBounds_X(window) || !this->_OutOfBounds_Y(window)) // if it is out of bounds then go back to previous position
 			{
 				this->_player1.setPosition(currPos);
 			}
 		}
 	}
-	//std::cout << "Window X: " << window.getSize().x << "\n" << "Window Y: " << window.getSize().y << "\n";
-	 std::cout << "Position Player X: " << this->_player1.getPosition().x << "\t";
-	 std::cout << "Position Player Y: " << this->_player1.getPosition().y << "\t";
-	 std::cout << "Cal X Left: " << this->_player1.getPosition().x  << "\t";
-	 std::cout << "Cal X Right: " << this->_player1.getPosition().x + this->Diameter << "\n";
+	
 }
-const bool Player::_ObstacleBounds()
+float Player::Calculation_Axis(float playerPos, float min, float max)
 {
+	// calculate to collide
+	if (playerPos < min) return min; // if the player position Position less than min then return min top outer
+	else if (playerPos > max) return max; // if the player position Position greater than max then return max or the lower outer
+	else return playerPos; // return playerPos if it is inside of the obstacle body
+}
+int Player::_ObstacleBounds()
+{
+	float Player_X_Min = this->_player1.getPosition().x;
+	float Player_X_Max = this->_player1.getPosition().x + this->Diameter;
+	float Player_Y_Min = this->_player1.getPosition().y;
+	float Player_Y_Max = this->_player1.getPosition().y + this->Diameter;
+
 	
 	for (auto& i : obstacles)
 	{
-		bool PlayerY_Top = this->_player1.getPosition().y + this->PlayerMovement.y  > i.getPosition().x + i.getSize().x; // Head or Top
-		bool PlayerY_Bot = this->_player1.getPosition().y + this->PlayerMovement.y + this->Diameter < i.getPosition().x; // Foot or Bot
-		if (this->PlayerMovement.x > 0.0f) // Left X - Axis
+		float Obstacle_X_Min = i.getPosition().x;
+		float Obstacle_X_Max = i.getPosition().x + i.getSize().x;
+		float Obstacle_Y_Min = i.getPosition().y;
+		float Obstacle_Y_Max = i.getPosition().y + i.getSize().x;
+		// Y
+		float Player_Y_Closeest_Obs = Calculation_Axis(Player_Y_Min, Obstacle_Y_Min, Obstacle_Y_Max);
+		float Distance_Y = Player_Y_Min - Player_Y_Closeest_Obs;
+		// X
+		float Player_X_Closeest_Obs = Calculation_Axis(Player_X_Min, Obstacle_X_Min, Obstacle_X_Max);
+		float Distance_X = Player_X_Min - Player_X_Closeest_Obs;
+
+		// if the distance is less than the circle radius then collide
+		float Distance = std::sqrt((Distance_X * Distance_X) + (Distance_Y * Distance_Y)); // corner
+		std::cout << "Distance: " << Distance << "\n";
+		if (Distance < this->Diameter && Player_X_Closeest_Obs != Player_X_Min &&
+			Player_Y_Closeest_Obs != Player_Y_Min)
 		{
-			if (
-				(this->_player1.getPosition().x + this->PlayerMovement.x + this->Diameter > i.getPosition().x)
-				&&
-				(PlayerY_Bot || PlayerY_Top)
-				)
-				return false;
+			return 3;
 		}
-		else if(this->PlayerMovement.x < 0.0f) // Right X - Axis
+		else if (Distance <= this->Diameter && Player_X_Closeest_Obs == Player_X_Min) // X 
 		{
-			if (
-				(this->_player1.getPosition().x + this->PlayerMovement.x < i.getPosition().x + i.getSize().x)
-				&&
-				(PlayerY_Bot || PlayerY_Top)
-				)
-				return false;
+			return 2;
+		}
+		else if (Distance <= this->Diameter && Player_Y_Closeest_Obs == Player_Y_Min) // Y
+		{
+			return 1;
 		}
 	}
-	return true;
-		
+	return 0;
 }
 const bool Player::_OutOfBounds_Y(sf::RenderWindow& window)
 {
