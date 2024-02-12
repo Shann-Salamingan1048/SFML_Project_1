@@ -74,23 +74,32 @@ int Player::_ObstacleBounds()
 	float Player_Y_Min = this->_player1.getPosition().y;
 	float Player_Y_Max = this->_player1.getPosition().y + this->Diameter;
 
-	
+	uint16_t count = 1; // count
 	for (auto& i : obstacles)
 	{
+		// X
 		float Obstacle_X_Min = i.getPosition().x;
 		float Obstacle_X_Max = i.getPosition().x + i.getSize().x;
+		// Y
 		float Obstacle_Y_Min = i.getPosition().y;
-		float Obstacle_Y_Max = i.getPosition().y + i.getSize().x;
+		float Obstacle_Y_Max = i.getPosition().y + i.getSize().y;
 		// Y
 		float Player_Y_Closeest_Obs = Calculation_Axis(Player_Y_Min, Obstacle_Y_Min, Obstacle_Y_Max);
-		float Distance_Y = Player_Y_Min - Player_Y_Closeest_Obs;
+		float Distance_Y = Player_Y_Closeest_Obs - Player_Y_Min;
+		//float Distance_Y = Player_Y_Min -  Player_Y_Closeest_Obs ;
+
 		// X
 		float Player_X_Closeest_Obs = Calculation_Axis(Player_X_Min, Obstacle_X_Min, Obstacle_X_Max);
-		float Distance_X = Player_X_Min - Player_X_Closeest_Obs;
+		float Distance_X = Player_X_Closeest_Obs - Player_X_Min;
+		//float Distance_X = Player_X_Min - Player_X_Closeest_Obs;
 
 		// if the distance is less than the circle radius then collide
 		float Distance = std::sqrt((Distance_X * Distance_X) + (Distance_Y * Distance_Y)); // corner
-		std::cout << "Distance: " << Distance << "\n";
+		
+		
+		//std::cout << "Distance " << count << ": " <<  Distance << "\n";
+		std::cout << "Distance X" << count << ": " << Distance_X << "\t" << "Distance Y" << count << ": " << Distance_Y << "\n";
+		count++;
 		if (Distance < this->Diameter && Player_X_Closeest_Obs != Player_X_Min &&
 			Player_Y_Closeest_Obs != Player_Y_Min)
 		{
@@ -109,8 +118,8 @@ int Player::_ObstacleBounds()
 }
 const bool Player::_OutOfBounds_Y(sf::RenderWindow& window)
 {
-	if (this->_player1.getPosition().y + (this->_player1.getRadius() * 2) > window.getSize().y
-		|| this->_player1.getPosition().y + this->PlayerMovement.y < -(abs(this->PlayerMovement.y)))
+	if (this->_player1.getPosition().y + (this->_player1.getRadius() * 2) > window.getSize().y + this->Move_Speed  * 2
+		|| this->_player1.getPosition().y  < this->_player1.getRadius())
 	{
 		return false;
 	}
@@ -118,8 +127,8 @@ const bool Player::_OutOfBounds_Y(sf::RenderWindow& window)
 }
 const bool Player::_OutOfBounds_X(sf::RenderWindow& window)
 {
-	if (this->_player1.getPosition().x + (this->_player1.getRadius() * 2) > window.getSize().x
-		|| this->_player1.getPosition().x + this->PlayerMovement.x < -(abs(this->PlayerMovement.x)))
+	if (this->_player1.getPosition().x + (this->_player1.getRadius() * 2) > window.getSize().x + this->Move_Speed * 2
+		|| this->_player1.getPosition().x < this->_player1.getRadius())
 	{
 		return false;
 	}
