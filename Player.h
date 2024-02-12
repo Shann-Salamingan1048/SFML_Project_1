@@ -15,7 +15,6 @@ private:
 	const bool _OutOfBounds_X(sf::RenderWindow& window);
 	const bool _OutOfBounds_Y(sf::RenderWindow& window);
     int _ObstacleBounds();
-	float Calculation_Axis(float val, float min, float max);
 	float Diameter;
 	float Move_Speed;
 public:

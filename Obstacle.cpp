@@ -12,8 +12,8 @@ void Obstacle::initObstacle()
 	this->obstacles[0].setPosition(200, 200);
 	this->obstacles[1].setPosition(300, 500);
 	this->obstacles[2].setPosition(500, 200);
-	for (auto& i : this->obstacles)
-		i.setOrigin(i.getSize() * 0.5f);
+	//for (auto& i : this->obstacles)
+	//	i.setOrigin(i.getSize() * 0.5f);
 }
 void Obstacle::renderObstacle(sf::RenderWindow& window)
 {

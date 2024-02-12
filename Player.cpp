@@ -11,7 +11,7 @@ void Player::initPLayer()
 {
 	this->_player1.setRadius(50);
 	this->_player1.setFillColor(sf::Color::Blue);
-	this->_player1.setPosition(100, 100);
+	this->_player1.setPosition(200, 200);
 	this->_player1.setOrigin(this->_player1.getRadius(), this->_player1.getRadius());
 	this->PlayerMovement.x = 0.0f;
 	this->PlayerMovement.y = 0.0f;
@@ -60,62 +60,49 @@ void Player::_ControllerPlayer(sf::RenderWindow& window, sf::Event& event)
 	}
 	
 }
-float Player::Calculation_Axis(float playerPos, float min, float max)
-{
-	// calculate to collide
-	if (playerPos < min) return min; // if the player position Position less than min then return min top outer
-	else if (playerPos > max) return max; // if the player position Position greater than max then return max or the lower outer
-	else return playerPos; // return playerPos if it is inside of the obstacle body
-}
 int Player::_ObstacleBounds()
 {
-	float Player_X_Min = this->_player1.getPosition().x;
-	float Player_X_Max = this->_player1.getPosition().x + this->Diameter;
-	float Player_Y_Min = this->_player1.getPosition().y;
-	float Player_Y_Max = this->_player1.getPosition().y + this->Diameter;
+    float playerRadius = this->Diameter / 2.0f;
 
-	uint16_t count = 1; // count
-	for (auto& i : obstacles)
-	{
-		// X
-		float Obstacle_X_Min = i.getPosition().x;
-		float Obstacle_X_Max = i.getPosition().x + i.getSize().x;
-		// Y
-		float Obstacle_Y_Min = i.getPosition().y;
-		float Obstacle_Y_Max = i.getPosition().y + i.getSize().y;
-		// Y
-		float Player_Y_Closeest_Obs = Calculation_Axis(Player_Y_Min, Obstacle_Y_Min, Obstacle_Y_Max);
-		float Distance_Y = Player_Y_Closeest_Obs - Player_Y_Min;
-		//float Distance_Y = Player_Y_Min -  Player_Y_Closeest_Obs ;
+    sf::Vector2f playerPosition = this->_player1.getPosition();
+	uint16_t  count = 1;
+    for (const auto& obstacle : obstacles)
+    {
+        sf::Vector2f obstaclePosition = obstacle.getPosition();
+        sf::Vector2f obstacleSize = obstacle.getSize();
 
-		// X
-		float Player_X_Closeest_Obs = Calculation_Axis(Player_X_Min, Obstacle_X_Min, Obstacle_X_Max);
-		float Distance_X = Player_X_Closeest_Obs - Player_X_Min;
-		//float Distance_X = Player_X_Min - Player_X_Closeest_Obs;
+        float closestX = std::clamp(playerPosition.x, obstaclePosition.x, obstaclePosition.x + obstacleSize.x);
+        float closestY = std::clamp(playerPosition.y, obstaclePosition.y, obstaclePosition.y + obstacleSize.y);
 
-		// if the distance is less than the circle radius then collide
-		float Distance = std::sqrt((Distance_X * Distance_X) + (Distance_Y * Distance_Y)); // corner
-		
-		
-		//std::cout << "Distance " << count << ": " <<  Distance << "\n";
-		std::cout << "Distance X" << count << ": " << Distance_X << "\t" << "Distance Y" << count << ": " << Distance_Y << "\n";
+        float distanceX = playerPosition.x - closestX;
+        float distanceY = playerPosition.y - closestY;
+
+        float distanceSquared  = (distanceX * distanceX) + (distanceY * distanceY);
+        float radiusSquared = playerRadius * playerRadius;
+
+		std::cout << "Distance Squared " << count << ": " << distanceSquared << "\n";
 		count++;
-		if (Distance < this->Diameter && Player_X_Closeest_Obs != Player_X_Min &&
-			Player_Y_Closeest_Obs != Player_Y_Min)
-		{
-			return 3;
-		}
-		else if (Distance <= this->Diameter && Player_X_Closeest_Obs == Player_X_Min) // X 
-		{
-			return 2;
-		}
-		else if (Distance <= this->Diameter && Player_Y_Closeest_Obs == Player_Y_Min) // Y
-		{
-			return 1;
-		}
-	}
-	return 0;
+        if (distanceSquared <= radiusSquared)
+        {
+            // Collision detected
+            return 3;
+        } // distance X and Y <= playerRadius might be a bug and its corresponding && (line of code)
+        else if (distanceX <= playerRadius && (closestY == obstaclePosition.y || closestY == obstaclePosition.y + obstacleSize.y))
+        {
+            // Collision along the Y-axis
+            return 2;
+        }
+        else if (distanceY <= playerRadius && (closestX == obstaclePosition.x || closestX == obstaclePosition.x + obstacleSize.x))
+        {
+            // Collision along the X-axis
+            return 1;
+        }
+    }
+
+    // No collision detected
+    return 0;
 }
+
 const bool Player::_OutOfBounds_Y(sf::RenderWindow& window)
 {
 	if (this->_player1.getPosition().y + (this->_player1.getRadius() * 2) > window.getSize().y + this->Move_Speed  * 2
